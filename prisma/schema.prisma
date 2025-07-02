@@ -27,10 +27,11 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations: 
-  posts Post[] // One-to-many
-  comments Comment[] // One-to-many
-  likes Like[] // One-to-many
+  posts Post[] // One-to-many    One User → Many Posts
+  comments Comment[] // One-to-many     One User → Many Comments
+  likes Like[] // One-to-many      One User → Many Likes
 
+  //  Many-to-Many (Çoka → Çok)
   followers Follows[] @relation("following") // users who follow this user
   following Follows[] @relation("follower") // users this user follows
 
@@ -48,6 +49,7 @@ model Post{
   updatedAt DateTime  @updatedAt
 
   // Relations
+  // Many Posts → One User
   author User @relation(fields: [authorId],references: [id], onDelete: Cascade) // cascade delete means delete all posts if author is deleted
   comments Comment[]
   likes Like[]
@@ -64,6 +66,7 @@ model Comment{
 
   // Relations
   author User @relation(fields: [authorId],references: [id],onDelete: Cascade)
+  // Many-to-One (Çok → Bire)
   post Post @relation(fields: [postId],references: [id], onDelete: Cascade)
   notifications Notification[]
 
@@ -90,6 +93,7 @@ model Follows{
   createdAt DateTime @default(now())
 
   // Relations
+  //  Many-to-Many (Çoka → Çok)
   follower    User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
   following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
 
@@ -100,7 +104,7 @@ model Follows{
 model Notification {
   id        String   @id @default(cuid())
   userId    String                  
-  creatorId String                  
+  creatorId String
   type      NotificationType        
   read      Boolean  @default(false)
   postId    String?                 
