@@ -1,12 +1,14 @@
 "use client"
 
-import { getPosts, toggleLike } from '@/actions/post.actions'
+import { createComment, deletePost, getPosts, toggleLike } from '@/actions/post.actions'
 import { useUser } from '@clerk/nextjs'
 import React, { useState } from 'react'
 import { Card, CardContent } from './ui/card'
 import Link from 'next/link'
 import { Avatar, AvatarImage } from './ui/avatar'
 import { formatDistanceToNow } from "date-fns";
+import { DeleteAlertDialog } from './DeleteAlerDialog'
+import toast from 'react-hot-toast'
 
 type Posts = Awaited<ReturnType<typeof getPosts>>
 type Post = Posts[number]
@@ -37,9 +39,35 @@ function PostCard({post,dbUserId}: {post:Post; dbUserId: string | null}) {
     }
   }
 
-  const handleAddComment = async () => {}
+  const handleAddComment = async () => {
+    if(!newComment.trim() || isCommenting) return
+    try {
+      setIsCommenting(true)
+      const result = await createComment(post.id, newComment)
+      if (result?.success) {
+        toast.success("Comment posted successfully")
+        setNewComment("")
+      }
+    } catch (error) {
+      toast.error("Failed to add comment")
+    }finally {
+      setIsCommenting(false)
+    }
+  }
 
-  const handleDeletePost = async () => {}
+  const handleDeletePost = async () => {
+    if(isDeleting) return
+    try {
+      setIsDeleting(true)
+      const result = await deletePost(post.id)
+      if(result?.success) toast.success("Post delete successfully")
+      else throw new Error(result?.error)
+    } catch (error) {
+      toast.error("Failed to delete post")
+    }finally{
+      setIsDeleting(false)
+    }
+  }
 
   return (
     <Card className='overflow-hidden'>
@@ -67,7 +95,7 @@ function PostCard({post,dbUserId}: {post:Post; dbUserId: string | null}) {
                 </div>
                 {/* Check if current user is the post author */}
                 {dbUserId === post.author.id && (
-                  <DeleteAlerDialog isDeleting={isDeleting} onDelete={handleDeletePost}/>
+                  <DeleteAlertDialog isDeleting={isDeleting} onDelete={handleDeletePost}/>
                 )}
               </div>
               <p className='mt-2 text-sm text-foreground break-words'>{post.content}</p>
